@@ -1,0 +1,19 @@
+import pandas as pd
+import glob
+
+# Вариант 1: Если файлы лежат в одной папке и имеют схожие названия
+all_files = glob.glob("C:\Users\ДНС\Desktop\отчет\Проект ОПР\Датасеты")  # Пример: "data/seasons/*.csv"
+
+# Читаем все CSV и объединяем в один DataFrame
+df_list = []
+for file in all_files:
+    season_df = pd.read_csv(file)
+    # Добавляем колонку с сезоном (опционально)
+    season_name = file.split("/")[-1].replace(".csv", "")
+    season_df["Season"] = season_name
+    df_list.append(season_df)
+
+combined_df = pd.concat(df_list, ignore_index=True)
+
+# Сохраняем результат в новый CSV
+combined_df.to_csv("combined_epl_results.csv", index=False)
