@@ -1,4 +1,5 @@
 import pandas as pd
+from datetime import datetime
 
 print("🔄 Загружаем исходные данные...")
 df = pd.read_csv("combined_epl_results.csv")
@@ -33,24 +34,48 @@ columns_to_keep = [
 df_filtered = df[columns_to_keep]
 
 # ----------------------------
-# 2. Обрабатываем дату
+# 2. Обрабатываем дату — указываем явно формат DD/MM/YYYY
 # ----------------------------
-df_filtered['Date'] = pd.to_datetime(df_filtered['Date'], errors='coerce')
+print("\n📅 Преобразуем столбец Date в формат datetime...")
 
-# Сортируем по дате — важно для дальнейшего анализа
+# Явно указываем формат даты как DD/MM/YYYY
+df_filtered['Date'] = pd.to_datetime(df_filtered['Date'], format='%d/%m/%Y', errors='coerce')
+
+# Диагностика: проверяем некорректные даты
+invalid_dates = df_filtered[df_filtered['Date'].isna()]
+if not invalid_dates.empty:
+    print(f"\n⚠️ Найдено {len(invalid_dates)} строк с некорректной датой.")
+    print("📉 Примеры:")
+    print(invalid_dates[['Date', 'HomeTeam', 'AwayTeam']].head())
+
+# ----------------------------
+# 3. Удаляем матчи из будущего
+# ----------------------------
+now = pd.Timestamp(datetime.now())
+future_matches = df_filtered[df_filtered['Date'] > now]
+if not future_matches.empty:
+    print(f"\n⏳ Найдено {len(future_matches)} матчей из будущего.")
+    print("🔮 Примеры:")
+    print(future_matches[['Date', 'HomeTeam', 'AwayTeam']].head())
+
+df_filtered = df_filtered[df_filtered['Date'] <= now]
+
+# ----------------------------
+# 4. Сортируем по дате — важно для дальнейшего анализа
+# ----------------------------
 df_filtered.sort_values(by='Date', inplace=True)
 df_filtered.reset_index(drop=True, inplace=True)
 
 # ----------------------------
-# 3. Проверяем и выводим информацию о результате
+# 5. Проверяем результат
 # ----------------------------
-print("\n✅ Колонки успешно отфильтрованы.")
-print(f"📊 Размер датасета: {df_filtered.shape}")
+print("\n✅ Фильтрация завершена.")
+print(f"📊 Размер датасета после очистки: {df_filtered.shape}")
 print("\n📅 Первые 2 строки:")
 print(df_filtered[['Date', 'HomeTeam', 'AwayTeam', 'FTR']].head(2))
 
 # ----------------------------
-# 4. Сохраняем обработанный датасет
+# 6. Сохраняем обработанный датасет
 # ----------------------------
 output_file = "processed_with_b365_data.csv"
 df_filtered.to_csv(output_file, index=False)
