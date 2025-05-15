@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException, Request
-from app.models import MatchRequest
-from app.predictor import predict_match
+from models import MatchRequest
+from predictor import predict_match
 import logging
 from datetime import datetime
 import sys
